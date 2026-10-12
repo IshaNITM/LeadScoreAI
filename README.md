@@ -320,8 +320,13 @@ Intense, transparent, high-velocity, and completely devoid of corporate politics
 ## 13. Submission Deliverables & Video Walkthrough
 
 - **GitHub Repository:** Full source code with client, server, tests, and configuration.
-- **Video Walkthrough (1–2 minutes):** [Link to Walkthrough Video](https://www.youtube.com/watch?v=placeholder) *(Include your Loom or YouTube video link prior to email submission)*.
+- **Video Walkthrough (1–2 minutes):** [Link to Walkthrough Video](
+
+https://drive.google.com/file/d/1AedyVrE33_TinuwMHDZnRsH01LO_u0uF/view?usp=sharing
+
+
+) *(Include your Loom or YouTube video link prior to email submission)*.
 - **Handbook Email Submission Details:**
   - **Recipient:** `recruiting@capraecapital.com`
-  - **Subject Line:** `Full Stack Developer - Handbook Submission - [Your Name]`
+  - **Subject Line:** `Full Stack Developer - Handbook Submission - Isha Pal`
   - **Attachments:** Updated Resume, GitHub Repository Link, Video Walkthrough Link.
