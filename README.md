@@ -1,175 +1,283 @@
-# LeadScore AI — AI-Assisted Lead Qualification & Next-Best-Action Workspace
-
-> **Caprae Capital Full Stack Developer Assignment: AI-Readiness / Lead Generation Enhancement**
-> A production-grade B2B workspace designed to help revenue and sales teams identify high-fit prospects, eliminate duplicates, and execute context-aware next best actions.
-
----
-
-## 🚀 Overview
-
-Modern sales and SDR teams lose hours each week sifting through unstructured inbound and outbound leads, manually cross-referencing firmographic data against criteria, and wondering who to reach out to first. 
-
-**LeadScore AI** solves this with an enterprise-ready qualification workspace featuring:
-1. **Deterministic ICP Fit Scoring Engine**: Transparent, auditable 100-point rubric assessing industry fit, headcount size, location, decision-maker title, technographics, and data completeness.
-2. **Next-Best-Action Recommendation Engine**: Context-driven action prompts (Executive Outreach, Technical Deep Dive, Data Enrichment, Nurture) with pre-generated outreach hooks tailored to each lead.
-3. **Fuzzy & Exact Duplicate Detection**: Flags overlapping records based on exact normalized domain, exact email, and company name string similarity.
-4. **AI Narrative Synthesis with Deterministic Fallbacks**: Natural language explanation of fit criteria and deal positioning powered by AI (OpenAI API / rule-based fallback).
-5. **Interactive ICP Tuning Workspace**: Real-time adjustment of target criteria and weight distribution with instant global lead recalculation.
-6. **Graceful Zero-Config Mode**: Seamlessly operates in-memory with pre-loaded mock data out of the box, or connects directly to MongoDB when configured.
-
----
-
-## 🏗️ Architecture & Tech Stack
-
-```
-IS/
-├── client/                     # Frontend Application
+LeadScore AI
+AI-Assisted Lead Qualification & Next-Best-Action Workspace
+LeadScore AI is a lead-management workspace that helps sales teams
+prioritize prospects, understand why a lead fits their target customer
+profile, and decide what action to take next. It combines configurable
+Ideal Customer Profile (ICP) criteria, deterministic lead scoring,
+next-best-action recommendations, duplicate checks, and an AI-assisted
+explanation layer.
+Built for the Caprae Capital Full Stack Developer AI-Readiness
+Pre-Screening Challenge.
+Problem and approach
+Sales teams can waste time reviewing large lead lists, following up with
+poor-fit prospects, and manually deciding which lead deserves attention.
+LeadScore AI brings lead review, qualification, explanations, and
+follow-up recommendations into one workspace.
+The design focuses on: 1. Consistent prioritization: weighted
+business rules calculate a repeatable score. 2. Explainability:
+users can understand the factors behind a score. 3. Actionability:
+recommendations help users decide whether to contact, verify, or enrich
+a lead.
+This application is a qualification and workflow-assistance tool. It
+does not claim to scrape websites automatically or independently verify
+every lead attribute.
+Features
+- Dashboard statistics, priority distribution, and industry breakdown.
+- Lead search, filtering, sorting, and pagination.
+- Lead creation, editing, details, and status management.
+- Explainable qualification score out of 100.
+- Next-best-action recommendations based on score and available data.
+- AI-assisted explanation with a deterministic fallback.
+- Configurable ICP criteria and scoring weights.
+- Batch requalification when ICP settings change.
+- Normalization-based duplicate detection.
+- Backend input validation using Zod.
+Lead qualification logic
+The qualification engine uses six weighted factors:
+  Factor                   Weight
+  Industry fit                 25
+  Company size                 20
+  Location fit                 15
+  Decision-maker role          15
+  Technology fit               15
+  Data completeness            10
+  Total               100
+Priority thresholds:
+  Score      Priority
+  75--100    High
+  45--74     Moderate
+  Below 45   Low
+Weights can be configured through ICP settings, with validation that the
+total equals 100. The numeric score is calculated by deterministic
+business rules, so the same lead and ICP configuration produce a
+consistent result. Missing information should be treated as uncertainty
+rather than automatically being treated as proof of poor fit.
+AI explanation layer
+The AI explanation service uses a configured Gemini-compatible API
+endpoint and requests structured fields such as explanation,
+topReason, nextAction, and justification.
+The service includes timeout and HTTP/response checks, output
+validation, and rate limiting. If the AI service is unavailable or its
+response is unusable, the application can fall back to a deterministic
+explanation.
+Important: AI explains qualification results; it does not calculate
+the numeric score. This keeps core business logic predictable and
+auditable.
+Duplicate detection
+The duplicate workflow normalizes values such as company domains, email
+addresses, and company names. Exact normalized domain or email matches
+can be treated as confirmed matches, while normalized company-name
+matches can be flagged as potential duplicates for review. This is
+normalization-based detection, not fuzzy or approximate-string matching.
+Technology stack
+  Layer                         Technology
+  Frontend                      React, TypeScript, Vite
+  Backend                       Node.js, Express, TypeScript
+  API                           REST
+  Validation                    Zod
+  Persistent database support   MongoDB with Mongoose
+  Local/demo storage            Seeded in-memory demo store
+  AI explanation                Configurable Gemini-compatible API endpoint
+Exact package versions and available scripts are defined in
+client/package.json and server/package.json.
+Architecture
+LeadScoreAI/
+├── client/
 │   ├── src/
-│   │   ├── components/         # Layout & Shared UI Design System
 │   │   ├── features/
-│   │   │   ├── dashboard/      # Analytics, Funnel Charts, Filterable Lead Table
-│   │   │   ├── lead-detail/    # Score Breakdown, Next Action, AI Narrative, Profile
-│   │   │   ├── icp/            # Interactive ICP Criteria & Weight Configurator
-│   │   │   └── leads/          # New Prospect Creation Modal
-│   │   ├── lib/api.ts          # Strongly typed client API client
-│   │   └── types/              # Domain & DTO interfaces
-├── server/                     # Backend API Service
+│   │   │   └── icp/
+│   │   └── lib/
+│   │       └── api.ts
+│   └── package.json
+├── server/
 │   ├── src/
-│   │   ├── controllers/        # Lead, ICP, and AI endpoint handlers
-│   │   ├── middleware/         # Error handling, validation, rate limiting
-│   │   ├── models/             # Mongoose schemas for MongoDB
-│   │   ├── routes/             # REST API routing
+│   │   ├── config/
+│   │   ├── controllers/
 │   │   ├── services/
-│   │   │   ├── qualificationEngine.ts   # Core 100-point scoring algorithm
-│   │   │   ├── nextBestAction.ts        # Prescriptive sales action logic
-│   │   │   ├── duplicateDetection.ts    # Exact & fuzzy deduplication
-│   │   │   ├── aiExplanation.ts         # LLM synthesis with robust fallback
-│   │   │   └── demoStore.ts             # High-performance in-memory fallback store
-│   │   ├── validators/         # Zod request validation schemas
-│   │   └── types.ts            # Core TypeScript domain models
-└── package.json                # Unified workspace root scripts
-```
-
-### Frontend
-- **React 19 & TypeScript**: Strict types, fast render cycles, custom hooks.
-- **Vite 8**: Rapid HMR and optimized production bundling.
-- **Tailwind CSS v4 & Lucide Icons**: Modern, high-density SaaS user experience.
-- **Recharts**: Responsive priority distribution pie charts and industry breakdown bar charts.
-- **React Router 7**: Client-side routing with clean nested layout.
-
-### Backend
-- **Node.js & Express**: High-throughput REST API.
-- **TypeScript**: Shared type contracts and end-to-end type safety.
-- **Vitest**: Unit & integration test suite (28 comprehensive test cases).
-- **Zod**: Robust runtime request validation.
-- **Mongoose / Memory Fallback**: Dual storage model supporting production MongoDB or zero-config in-memory operation.
-
----
-
-## ⚡ Quick Start
-
-### Prerequisites
-- Node.js >= 18
-- npm >= 9
-
-### 1. Installation
-Install dependencies across both client and server:
-```bash
-npm --prefix server install
-npm --prefix client install
-```
-
-### 2. Run Tests
-Execute the comprehensive test suite verifying the qualification engine, duplicate detection, and next-best-action rules:
-```bash
-npm test
-# Or: npm --prefix server test
-```
-All 28 tests pass:
-```
- ✓ src/services/qualificationEngine.test.ts (20)
- ✓ src/services/duplicateDetection.test.ts (4)
- ✓ src/services/nextBestAction.test.ts (4)
- Test Files  3 passed (3)
-      Tests  28 passed (28)
-```
-
-### 3. One-Command Quick Start
-Simply run the startup script to start both backend and frontend automatically:
-```bash
-./is.sh
-```
-
-Or run them individually:
-- Backend: `npm --prefix server run dev` (Port 3001)
-- Frontend: `npm --prefix client run dev` (Port 5173)
-
-Open your browser at **`http://localhost:5173`**.
-
----
-
-## ⚙️ Configuration & Environment Variables
-
-Create a `.env` file in `server/` (optional; defaults will be used if omitted):
-
-```env
-PORT=3001
-MONGODB_URI=mongodb://localhost:27017/caprae-leads   # Optional: falls back to in-memory store
-OPENAI_API_KEY=your_key_here                          # Optional: falls back to rule-based synthesis
-OPENAI_MODEL=gpt-4o-mini
-RATE_LIMIT_MAX=100
-```
-
----
-
-## 📊 Core Capabilities
-
-### 1. Transparent 100-Point Scoring Model
-Unlike opaque black-box AI scores, every lead score is decomposable into 6 objective factors:
-- **Industry Fit (25 pts)**: Strict match with target vertical.
-- **Company Size Fit (20 pts)**: Scaled points based on headcount within ideal corridor.
-- **Location Fit (15 pts)**: Target metropolitan hubs and regions.
-- **Decision-Maker Persona (15 pts)**: Seniority level (C-level, VP, Director).
-- **Technographic Fit (15 pts)**: Modern tech stack compatibility.
-- **Data Completeness (10 pts)**: Evaluates presence of phone, domain, title, and notes.
-
-### 2. Next-Best-Action Prescriptions
-Automates the SDR decision workflow:
-- **High Fit (Score ≥ 75)**: Executive Outreach / Technical Discovery call + generated personalized pitch.
-- **Moderate Fit (45 ≤ Score < 75)**: Mid-market consultation or feature alignment.
-- **Low Fit (Score < 45)**: Educational nurture sequence or disqualify.
-- **Missing Critical Data**: Contact enrichment action before outreach.
-
-### 3. Duplicate Detection & Grouping
-- Exact domain matching (e.g. `stripe.com` vs `http://www.stripe.com/`).
-- Normalized email matching.
-- Fuzzy company name similarity to prevent fragmented account activity.
-
----
-
-## 🛠️ REST API Reference
-
-| Endpoint | Method | Description |
-|---|---|---|
-| `/api/health` | `GET` | System health check and uptime |
-| `/api/dashboard/stats` | `GET` | Aggregated priority, score, and industry statistics |
-| `/api/leads` | `GET` | Paginated leads with search, priority, industry, and sort filters |
-| `/api/leads` | `POST` | Create a prospect and automatically qualify against active ICP |
-| `/api/leads/:id` | `GET` | Fetch single lead with score breakdown and duplicate flags |
-| `/api/leads/:id` | `PATCH` | Update prospect details and trigger re-qualification |
-| `/api/leads/:id/qualify` | `POST` | Manually recalculate qualification for a lead |
-| `/api/leads/:id/explanation` | `POST` | Generate natural language AI synthesis of qualification |
-| `/api/leads/qualify` | `POST` | Batch recalculate all leads |
-| `/api/icp` | `GET` | Retrieve active ICP rules and scoring weights |
-| `/api/icp` | `PUT` | Update ICP configuration and weights |
-
----
-
-## 🧪 Testing Summary
-
-The project includes thorough unit tests covering:
-- **Qualification Engine**: Full fit, partial fit, zero fit, boundary company sizes, missing data degradation, weight adjustments.
-- **Next-Best-Action**: High score routing, low score routing, missing data routing, custom urgency tagging.
-- **Duplicate Detection**: Exact domains, exact email clashes, normalized corporate names, clean unique sets.
-
-Run `npm test` anytime to verify all tests.
+│   │   ├── validators/
+│   │   └── index.ts
+│   └── package.json
+└── README.md
+This is a high-level map of key areas; the repository may contain
+additional files.
+Request flow
+1. The React client sends a request through its central API helper.
+2. The Express REST API routes the request to the relevant controller.
+3. Controllers coordinate validation and service calls.
+4. Services implement scoring, next-best-action recommendations,
+   duplicate checks, and AI explanations.
+5. The application uses MongoDB when configured, or the in-memory demo
+   store in demo mode.
+6. The API response is displayed in the frontend.
+Data storage and demo mode
+The backend supports MongoDB persistence through Mongoose when a MongoDB
+connection string is configured. If MongoDB is not configured or a
+connection fails, the application can use seeded in-memory demo data.
+Demo-mode limitation: changes held in memory are lost when the
+server restarts. For persistent deployment, configure MongoDB (for
+example, MongoDB Atlas), use a dedicated database user, restrict network
+access, and test persistence by restarting the server.
+Performance and reliability
+Current reliability measures include centralized frontend API calls,
+separation of controllers and services, Zod validation, AI
+timeout/response checks, fallback explanations, and list navigation
+features such as search, filtering, sorting, and pagination.
+The current lead-list flow performs pagination in the application layer
+after loading leads. For larger datasets, move filtering, sorting,
+pagination, and dashboard aggregations into MongoDB queries and add
+indexes based on measured query patterns (for example, normalized
+domain, email, status, industry, or score).
+No dedicated distributed cache is assumed. If usage grows, measure
+latency first and consider caching frequently read ICP settings or
+dashboard aggregates, with explicit invalidation whenever relevant lead
+data or ICP settings change.
+Getting started
+Prerequisites
+- Node.js and npm compatible with the package files.
+- Git.
+- MongoDB, optional for demo mode but recommended for persistence.
+- An AI API key and endpoint, optional if using fallback explanations.
+Clone the repository
+git clone https://github.com/IshaNITM/LeadScoreAI.git
+cd LeadScoreAI
+Install dependencies
+In one terminal:
+cd client
+npm install
+In another terminal from the repository root:
+cd server
+npm install
+Configure environment variables
+Create a local .env file under server/ using only the variable names
+supported by server/src/config/index.ts. Common configuration names in
+this project include:
+  Variable                            Purpose
+  PORT                              Backend port, if supported
+  MONGODB_URI                       MongoDB connection string, if
+                                      supported under this name
+  AI_API_URL                        Configured AI endpoint
+  AI_API_KEY                        AI API key
+  GEMINI_API_KEY                    Alternative AI key variable
+                                  supported by the configuration
+Check server/src/config/index.ts for the exact names, required values,
+and defaults before running or deploying. Do not commit .env files or
+real credentials. Keep AI keys on the server, never in frontend code.
+Illustrative local values only (verify names against the configuration):
+PORT=5000
+MONGODB_URI=mongodb://127.0.0.1:27017/leadscoreai
+AI_API_URL=YOUR_CONFIGURED_AI_ENDPOINT
+AI_API_KEY=YOUR_SECRET_KEY
+Run the application
+Start the client:
+cd client
+npm run dev
+Start the backend in a second terminal using the development script
+defined in server/package.json (commonly npm run dev). The package
+scripts are the source of truth; if a script differs, use the script
+actually listed there.
+Open the local URL printed by Vite. Check the backend output for the
+listening port and whether it is using MongoDB or demo mode.
+Smoke-test checklist
+1. Confirm the dashboard statistics and leads load.
+2. Search for a lead and use filters, sorting, and pagination.
+3. Open a lead and review its score, priority, factors, and next-best
+   action.
+4. Create a valid lead and confirm it appears in the list.
+5. Edit a lead and check whether qualification updates as expected.
+6. Submit invalid inputs and verify controlled validation errors.
+7. Test ICP validation, including invalid employee ranges and weights
+   that do not total 100.
+8. Save valid ICP settings and verify requalification.
+9. Test duplicate detection using a repeated normalized email/domain.
+10. Test AI explanations with valid configuration and test the fallback
+    when AI is unavailable.
+11. With MongoDB enabled, restart the server and verify saved data
+    persists.
+Run the lint, test, and build scripts that are actually present in the
+package files. Do not report a test as passing unless it has been run.
+API overview
+The backend exposes REST endpoints through Express. Core workflows
+include listing and browsing leads, creating and updating leads,
+qualification and requalification, next-best-action recommendations, AI
+explanations, ICP configuration, and duplicate checks.
+For exact endpoint paths and request schemas, inspect the route
+definitions and validators under server/src/. Route definitions in the
+repository are the authoritative reference.
+Deployment
+The application can be deployed as a separate frontend, backend, and
+database.
+Suggested hosting layout: - Frontend: Vercel or another static host
+for the Vite build. - Backend: Render or another Node.js application
+host. - Database: MongoDB Atlas for persistence. - AI: provider
+corresponding to the configured endpoint.
+These are recommendations, not a claim that the app is already deployed.
+Frontend deployment
+1. Import the GitHub repository into the hosting provider.
+2. Set the project root to client.
+3. Use the build command defined in client/package.json (commonly
+   npm run build).
+4. For a standard Vite build, the output directory is dist.
+5. Configure the API base URL using the variable supported by
+   client/src/lib/api.ts.
+6. Configure backend CORS to allow the deployed frontend origin, if
+   applicable.
+7. Test the deployed frontend against the deployed backend.
+Backend deployment
+1. Create a Node.js web service from the repository.
+2. Set the root directory to server.
+3. Configure install, build, and start commands using
+   server/package.json.
+4. Add required database and AI variables in the hosting dashboard.
+5. Configure and test a health-check endpoint if the host requires one.
+6. Restrict CORS to trusted origins where appropriate.
+7. Review logs and test the API end to end.
+In this suggested setup, the frontend host serves static assets, the
+backend host runs Express, MongoDB Atlas provides persistence, and the
+AI provider handles explanation requests. State the actual cloud
+provider and live URLs in the submission only after deployment is
+complete.
+Security notes
+- Keep .env, .env.*, database credentials, and API keys out of
+  Git.
+- Commit an .env.example with placeholders only if useful.
+- Revoke or rotate any credential exposed in a commit or push attempt.
+- Validate user input on the backend.
+- Use least-privilege database credentials and restrict database
+  network access.
+- Never expose AI secrets in Vite/client-side variables.
+- Review rate limits, request-size limits, CORS, error responses,
+  logging, and data retention before production use.
+Future improvements
+- Move list filtering, sorting, pagination, and aggregates into
+  database queries.
+- Add tests for scoring boundaries, missing data, duplicate
+  normalization, ICP validation, and AI fallback.
+- Add observability for API latency, AI errors, and qualification
+  outcomes.
+- Add import/export and carefully scoped CRM integrations.
+- Add external enrichment with clear source attribution.
+- Add approximate-string duplicate matching only if needed, with
+  transparent thresholds and human review.
+- Add authentication and role-based access controls for multi-user
+  production use.
+- Use a background queue for expensive batch requalification at larger
+  scale.
+Assignment submission checklist
+The Caprae Capital handbook asks for a GitHub repository containing the
+relevant code and a README with setup instructions, plus a 1--2 minute
+video explaining the project, business value, decisions, and results. A
+demo link is optional but recommended.
+- [ ] Confirm the repository contains only project files.
+- [ ] Verify no .env files or credentials are committed.
+- [ ] Test setup from a clean clone.
+- [ ] Test dashboard, qualification, ICP, duplicates, and AI fallback.
+- [ ] Run available production build and tests.
+- [ ] Deploy and verify the app if feasible; add real URLs once ready.
+- [ ] Record a concise walkthrough focused on business value and
+  technical choices.
+- [ ] Include an up-to-date resume in the submission email.
+Author
+Isha Pal
+Project: LeadScore AI --- AI-Assisted Lead Qualification &
+Next-Best-Action Workspace
+Repository: https://github.com/IshaNITM/LeadScoreAI
