@@ -181,7 +181,7 @@ High-velocity, candid, mission-driven, and devoid of corporate politics. A cultu
 ## 📬 Submission Checklist
 
 - **Repository:** Complete source code (client, server, tests, config).
-- **Video Walkthrough (1–2 min):** [Walkthrough Video Link](https://www.youtube.com/watch?v=placeholder) *(Insert your Loom or YouTube video link prior to sending)*.
+- **Video Walkthrough (1–2 min):** [Walkthrough Video Link](https://drive.google.com/file/d/1AedyVrE33_TinuwMHDZnRsH01LO_u0uF/view?usp=sharing) *(Insert your Loom or YouTube video link prior to sending)*.
 - **Submission Email:** `recruiting@capraecapital.com`
 - **Subject Line:** `Full Stack Developer - Handbook Submission - [Your Name]`
 - **Attachments:** Resume, Repository URL, Video URL.
